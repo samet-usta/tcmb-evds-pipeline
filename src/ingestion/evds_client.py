@@ -2,17 +2,11 @@
 
 import logging
 import os
-import time
 
-import requests
-import yaml
+from src.ingestion.http_utils import HttpRequestError, get_with_retry
+from src.ingestion.series_config import get_group_config
 
 logger = logging.getLogger(__name__)
-
-REQUEST_TIMEOUT = (5, 30)  # (connect, read) seconds
-MAX_ATTEMPTS = 3
-BACKOFF_SECONDS = 2
-RETRY_STATUS_CODES = {429, 500, 502, 503, 504}
 
 
 class EvdsError(Exception):
@@ -29,18 +23,6 @@ class EvdsResponseError(EvdsError):
 
 class EvdsNoDataError(EvdsError):
     """Response is valid but has no items for the date range."""
-
-
-def load_series_config(config_path=None):
-    """Read series.yaml and return the groups as a dict keyed by group name."""
-    if config_path is None:
-        config_path = os.environ["SERIES_CONFIG_PATH"]
-    with open(config_path, encoding="utf-8") as file:
-        config = yaml.safe_load(file)
-    groups = {}
-    for group in config["series_groups"]:
-        groups[group["group"]] = group
-    return groups
 
 
 def get_series_codes(group_config):
@@ -80,30 +62,11 @@ def fetch(url, api_key):
     """GET the URL with timeout, retry and backoff. Return the JSON payload."""
     # Key sadece header'da. Log ve exception mesajına header girmez.
     headers = {"key": api_key}
-    last_error = None
-    for attempt in range(1, MAX_ATTEMPTS + 1):
-        try:
-            response = requests.get(url, headers=headers, timeout=REQUEST_TIMEOUT)
-            status_code = response.status_code
-        except (requests.Timeout, requests.ConnectionError) as error:
-            status_code = None
-            last_error = type(error).__name__
-
-        if status_code == 200:
-            return read_json(response)
-
-        if status_code is not None:
-            last_error = f"HTTP {status_code}"
-            # 429 ve 5xx dışındaki hata kalıcıdır (ör. 401 yanlış key). Retry yapılmaz.
-            if status_code not in RETRY_STATUS_CODES:
-                raise EvdsRequestError(f"EVDS request failed: {last_error}")
-
-        logger.warning("EVDS attempt %s/%s failed: %s", attempt, MAX_ATTEMPTS, last_error)
-        if attempt < MAX_ATTEMPTS:
-            wait_seconds = BACKOFF_SECONDS ** attempt
-            time.sleep(wait_seconds)
-
-    raise EvdsRequestError(f"EVDS request failed after {MAX_ATTEMPTS} attempts: {last_error}")
+    try:
+        response = get_with_retry(url, headers=headers)
+    except HttpRequestError as error:
+        raise EvdsRequestError(f"EVDS request failed: {error}") from error
+    return read_json(response)
 
 
 def parse_response(payload):
@@ -125,11 +88,7 @@ def fetch_group(group_name, start_date, end_date, config_path=None):
     if start_date > end_date:
         raise ValueError("start_date must be before or equal to end_date")
 
-    groups = load_series_config(config_path)
-    if group_name not in groups:
-        raise ValueError(f"Unknown series group: {group_name}")
-
-    group_config = groups[group_name]
+    group_config = get_group_config(group_name, config_path)
     series_codes = get_series_codes(group_config)
     base_url = os.environ["EVDS_BASE_URL"]
     api_key = os.environ["EVDS_API_KEY"]

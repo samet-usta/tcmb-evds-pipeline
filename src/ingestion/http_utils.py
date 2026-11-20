@@ -1,7 +1,10 @@
 """Shared HTTP helper: GET request with timeout and retry."""
+import logging
 import time
 
 import requests
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT = (5, 30)
 MAX_ATTEMPTS = 3
@@ -36,6 +39,7 @@ def get_wait_seconds(response, attempt):
 def get_with_retry(url, headers=None, params=None,
                    timeout=DEFAULT_TIMEOUT, max_attempts=MAX_ATTEMPTS):
     """Send GET. Retry on timeout, connection error, 429 and 5xx."""
+    # Headers (ör. API key) log ve exception mesajına girmez.
     last_error = None
 
     for attempt in range(1, max_attempts + 1):
@@ -55,6 +59,7 @@ def get_with_retry(url, headers=None, params=None,
             if not is_retryable_status(status_code):
                 raise last_error
 
+        logger.warning("HTTP attempt %s/%s failed: %s", attempt, max_attempts, last_error)
         if attempt < max_attempts:
             time.sleep(get_wait_seconds(response, attempt))
 
