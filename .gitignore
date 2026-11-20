@@ -10,7 +10,6 @@ venv/
 
 # Airflow runtime
 logs/
-plugins/
 airflow.cfg
 
 # dbt
