@@ -27,3 +27,7 @@ data/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Env backups and variants (keep only the example)
+.env.*
+!.env.example
