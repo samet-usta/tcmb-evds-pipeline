@@ -31,3 +31,7 @@ Thumbs.db
 # Env backups and variants (keep only the example)
 .env.*
 !.env.example
+
+# Airflow runtime files
+airflow/logs/
+airflow/config/
