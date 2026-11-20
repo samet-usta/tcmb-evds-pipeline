@@ -1,0 +1,29 @@
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+
+# Airflow runtime
+logs/
+plugins/
+airflow.cfg
+
+# dbt
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+
+# LocalStack and local data
+volume/
+data/
+
+# IDE and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
