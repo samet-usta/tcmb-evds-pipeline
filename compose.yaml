@@ -1,7 +1,10 @@
 name: tcmb-evds-pipeline
 
 x-airflow-common: &airflow-common
-  image: apache/airflow:3.1.8-python3.12
+  build:
+    context: .
+    target: dev
+  image: tcmb-evds-airflow:dev
   environment: &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
     AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
@@ -26,6 +29,8 @@ x-airflow-common: &airflow-common
     - ./airflow/plugins:/opt/airflow/plugins
     - ./src:/opt/pipeline/src
     - ./config:/opt/pipeline/config:ro
+    - ./tests:/opt/pipeline/tests:ro
+    - ./pytest.ini:/opt/pipeline/pytest.ini:ro
   user: "${AIRFLOW_UID}:0"
   depends_on: &airflow-common-depends-on
     airflow-db:
