@@ -1,0 +1,104 @@
+# EVDS series config.
+# Source: TCMB EVDS 3 serieList. Verified: 2026-11-20 (HTTP 200, data filled).
+# frequency: business_daily | weekly_friday | monthly
+# available_from: first date with data in EVDS (backfill floor).
+
+version: 1
+
+series_groups:
+  - group: fx_rates
+    datagroup: bie_dkdovytl
+    frequency: business_daily
+    unit: TRY
+    available_from: "1950-01-02"
+    series:
+      - code: TP.DK.USD.A.YTL
+        name: USD buying rate
+        fallback: {source: frankfurter, base: USD, quote: TRY}
+      - code: TP.DK.USD.S.YTL
+        name: USD selling rate
+        fallback: {source: frankfurter, base: USD, quote: TRY}
+      - code: TP.DK.EUR.A.YTL
+        name: EUR buying rate
+        fallback: {source: frankfurter, base: EUR, quote: TRY}
+      - code: TP.DK.EUR.S.YTL
+        name: EUR selling rate
+        fallback: {source: frankfurter, base: EUR, quote: TRY}
+      - code: TP.DK.GBP.A.YTL
+        name: GBP buying rate
+        fallback: {source: frankfurter, base: GBP, quote: TRY}
+      - code: TP.DK.GBP.S.YTL
+        name: GBP selling rate
+        fallback: {source: frankfurter, base: GBP, quote: TRY}
+
+  - group: deposit_rates
+    datagroup: bie_mt100h
+    frequency: weekly_friday
+    unit: percent
+    available_from: "2002-01-04"
+    series:
+      - code: TP.TRY.MT06
+        name: TRY deposit rate, total (flow)
+      - code: TP.USD.MT06
+        name: USD deposit rate, total (flow)
+      - code: TP.EUR.MT06
+        name: EUR deposit rate, total (flow)
+
+  - group: loan_rates
+    datagroup: bie_kt100h
+    frequency: weekly_friday
+    unit: percent
+    available_from: "2002-01-04"
+    series:
+      - code: TP.KTF10
+        name: Personal loan rate, TRY (flow)
+      - code: TP.KTF11
+        name: Vehicle loan rate, TRY (flow)
+      - code: TP.KTF12
+        name: Housing loan rate, TRY (flow)
+      - code: TP.KTF17
+        name: Commercial loan rate, TRY (flow)
+      - code: TP.KTFTUK
+        name: Consumer loan rate, TRY (flow)
+
+  - group: loan_volumes
+    datagroup: bie_hpbitablo6
+    frequency: weekly_friday
+    unit: TRY_thousand
+    available_from: "2024-06-28"
+    series:
+      - code: TP.HPBITABLO6.1
+        name: Loans to residents, total
+      - code: TP.HPBITABLO6.2
+        name: Consumer loans
+      - code: TP.HPBITABLO6.19
+        name: Loans to non-financial corporations
+
+  - group: deposit_volumes
+    datagroup: bie_hpbitablo3
+    frequency: weekly_friday
+    unit: TRY_thousand
+    available_from: "2024-06-28"
+    series:
+      - code: TP.HPBITABLO3.1
+        name: TRY deposits, total
+      - code: TP.HPBITABLO3.2
+        name: TRY deposits, residents
+
+  - group: policy_rate
+    datagroup: bie_bispolfaiz
+    frequency: monthly
+    unit: percent
+    available_from: "2002-02-01"
+    series:
+      - code: TP.BISPOLFAIZ.TUR
+        name: CBRT policy rate (BIS source)
+
+  - group: funding_cost
+    datagroup: bie_apifon
+    frequency: business_daily
+    unit: percent
+    available_from: "2011-01-03"
+    series:
+      - code: TP.APIFON4
+        name: CBRT weighted average funding cost
