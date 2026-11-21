@@ -1,4 +1,4 @@
-# Raw landing checks. Run after load, before dbt.
+# Raw landing checks. Run after load, before dbt. Freshness: dbt source freshness.
 dataset: warehouse/warehouse/raw/evds_landing
 
 checks:
@@ -6,13 +6,6 @@ checks:
       name: Table has rows
       threshold:
         must_be_greater_than: 0
-  - freshness:
-      name: Last ingestion is less than 24 hours old
-      column: ingested_at
-      threshold:
-        unit: hour
-        must_be_less_than: 24
-        level: warn
 
 columns:
   - name: group_name
