@@ -27,6 +27,11 @@ x-airflow-common: &airflow-common
     AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION}
     AWS_ENDPOINT_URL_S3: ${AWS_ENDPOINT_URL_S3}
     S3_BUCKET: ${S3_BUCKET}
+    WAREHOUSE_HOST: warehouse
+    WAREHOUSE_PORT: "5432"
+    WAREHOUSE_DB: ${WAREHOUSE_DB}
+    WAREHOUSE_USER: ${WAREHOUSE_USER}
+    WAREHOUSE_PASSWORD: ${WAREHOUSE_PASSWORD}
   volumes:
     - ./dags:/opt/airflow/dags
     - ./airflow/logs:/opt/airflow/logs
@@ -42,6 +47,8 @@ x-airflow-common: &airflow-common
       condition: service_healthy
     localstack:
       condition: service_healthy
+    warehouse:
+      condition: service_healthy
 
 services:
   warehouse:
@@ -55,6 +62,7 @@ services:
       - "5433:5432"
     volumes:
       - warehouse-data:/var/lib/postgresql/data
+      - ./warehouse/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 10s
