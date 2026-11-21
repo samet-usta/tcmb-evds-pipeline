@@ -1,0 +1,70 @@
+version: 2
+
+models:
+  - name: int_evds_observations_deduped
+    description: >
+      EVDS observations deduplicated across overlapping landing windows.
+      One row per (series_code, observation_date). The row with the latest
+      ingested_at wins; on a tie, the latest dt wins. Null values are kept
+      for source priority in int_observations_unioned.
+    columns:
+      - name: series_code
+        description: EVDS series code.
+      - name: observation_date
+        description: Observation date.
+      - name: value
+        description: Observed value. Null on weekends and holidays.
+      - name: source
+        description: Always evds.
+      - name: group_name
+        description: Series group.
+      - name: dt
+        description: Landing partition date of the selected row.
+      - name: ingested_at
+        description: API fetch time (UTC) of the selected row.
+
+  - name: int_frankfurter_fx_rates_mapped
+    description: >
+      Frankfurter fx rates deduplicated and mapped to EVDS series codes.
+      One Frankfurter rate maps to the buying (A) and selling (S) series
+      with the same value. Mapping comes from the series_metadata seed.
+      One row per (series_code, observation_date).
+    columns:
+      - name: series_code
+        description: EVDS series code from series_metadata.
+      - name: observation_date
+        description: Observation date.
+      - name: value
+        description: ECB based rate.
+      - name: source
+        description: Always frankfurter.
+      - name: group_name
+        description: Series group (fx_rates).
+      - name: dt
+        description: Landing partition date of the selected row.
+      - name: ingested_at
+        description: API fetch time (UTC) of the selected row.
+
+  - name: int_observations_unioned
+    description: >
+      All observations from all sources in long format, each series in its
+      own frequency. EVDS has priority. Frankfurter fills a day only when
+      EVDS has no row for that day. Rows with a null value are removed.
+      One row per (series_code, observation_date).
+    columns:
+      - name: series_code
+        description: EVDS series code.
+      - name: frequency
+        description: Series frequency from series_metadata.
+      - name: observation_date
+        description: Observation date.
+      - name: value
+        description: Observed value. Never null.
+      - name: source
+        description: evds or frankfurter. Shows the fallback rows.
+      - name: group_name
+        description: Series group.
+      - name: dt
+        description: Landing partition date of the selected row.
+      - name: ingested_at
+        description: API fetch time (UTC) of the selected row.
