@@ -22,6 +22,11 @@ x-airflow-common: &airflow-common
     EVDS_BASE_URL: ${EVDS_BASE_URL}
     EVDS_API_KEY: ${EVDS_API_KEY}
     FRANKFURTER_BASE_URL: ${FRANKFURTER_BASE_URL}
+    AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+    AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+    AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION}
+    AWS_ENDPOINT_URL_S3: ${AWS_ENDPOINT_URL_S3}
+    S3_BUCKET: ${S3_BUCKET}
   volumes:
     - ./dags:/opt/airflow/dags
     - ./airflow/logs:/opt/airflow/logs
@@ -34,6 +39,8 @@ x-airflow-common: &airflow-common
   user: "${AIRFLOW_UID}:0"
   depends_on: &airflow-common-depends-on
     airflow-db:
+      condition: service_healthy
+    localstack:
       condition: service_healthy
 
 services:
@@ -62,12 +69,14 @@ services:
       LOCALSTACK_AUTH_TOKEN: ${LOCALSTACK_AUTH_TOKEN}
       SERVICES: s3
       AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION}
+      S3_BUCKET: ${S3_BUCKET}
     ports:
       - "4566:4566"
     volumes:
       - localstack-data:/var/lib/localstack
+      - ./localstack/init/ready.d:/etc/localstack/init/ready.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "curl -fs http://localhost:4566/_localstack/health"]
+      test: ["CMD-SHELL", "curl -fs http://localhost:4566/_localstack/init/ready | grep -Eq '\"completed\": ?true'"]
       interval: 10s
       timeout: 5s
       retries: 10
