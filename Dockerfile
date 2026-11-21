@@ -18,6 +18,14 @@ COPY requirements-soda.txt /requirements-soda.txt
 RUN python -m venv /opt/soda-venv \
     && PIP_USER=false /opt/soda-venv/bin/pip install --no-cache-dir -r /requirements-soda.txt
 
+# dbt has its own venv. Its packages do not change Airflow packages.
+USER root
+RUN mkdir -p /opt/dbt-venv && chown airflow:0 /opt/dbt-venv
+USER airflow
+COPY requirements-dbt.txt /requirements-dbt.txt
+RUN python -m venv /opt/dbt-venv \
+    && PIP_USER=false /opt/dbt-venv/bin/pip install --no-cache-dir -r /requirements-dbt.txt
+
 FROM base AS dev
 
 COPY requirements-dev.txt /requirements-dev.txt

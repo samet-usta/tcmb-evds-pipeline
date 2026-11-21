@@ -16,6 +16,7 @@ airflow.cfg
 dbt/target/
 dbt/dbt_packages/
 dbt/logs/
+dbt/.user.yml
 
 # LocalStack and local data
 volume/
