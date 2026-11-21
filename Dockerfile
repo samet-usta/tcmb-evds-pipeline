@@ -10,6 +10,14 @@ RUN pip install --no-cache-dir \
     -r /requirements.txt \
     --constraint "${CONSTRAINT_URL}"
 
+# Soda Core has its own venv. Its packages do not change Airflow packages.
+USER root
+RUN mkdir -p /opt/soda-venv && chown airflow:0 /opt/soda-venv
+USER airflow
+COPY requirements-soda.txt /requirements-soda.txt
+RUN python -m venv /opt/soda-venv \
+    && PIP_USER=false /opt/soda-venv/bin/pip install --no-cache-dir -r /requirements-soda.txt
+
 FROM base AS dev
 
 COPY requirements-dev.txt /requirements-dev.txt

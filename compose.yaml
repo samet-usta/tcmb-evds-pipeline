@@ -41,6 +41,7 @@ x-airflow-common: &airflow-common
     - ./config:/opt/pipeline/config:ro
     - ./tests:/opt/pipeline/tests:ro
     - ./pytest.ini:/opt/pipeline/pytest.ini:ro
+    - ./soda:/opt/pipeline/soda:ro
   user: "${AIRFLOW_UID}:0"
   depends_on: &airflow-common-depends-on
     airflow-db:
