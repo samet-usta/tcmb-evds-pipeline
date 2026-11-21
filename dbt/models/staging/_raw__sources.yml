@@ -1,0 +1,48 @@
+version: 2
+
+sources:
+  - name: raw
+    description: Raw landing data loaded from S3 by the Python loader (src/load/postgres_loader.py).
+    schema: raw
+    loader: postgres_loader
+    config:
+      freshness:
+        warn_after: {count: 24, period: hour}
+        error_after: {count: 48, period: hour}
+      # ingested_at = API fetch time. loaded_at changes on rerun, so it can hide old data.
+      loaded_at_field: ingested_at
+
+    tables:
+      - name: evds_landing
+        description: >
+          One row per landing file. Primary key (group_name, dt).
+          EVDS and Frankfurter rows are in the same table; the source column separates them.
+          Items are raw JSON; staging unnests them.
+        columns:
+          - name: group_name
+            data_type: text
+            description: Series group from config/series.yaml (JSON metadata.group). Part of the primary key.
+          - name: dt
+            data_type: date
+            description: Partition date (Airflow logical date). The file holds the window [dt - lookback, dt]. Part of the primary key.
+          - name: source
+            data_type: text
+            description: Data source. Values evds or frankfurter.
+          - name: ingested_at
+            data_type: timestamptz
+            description: API fetch time (UTC). Used for source freshness and for dedup in intermediate.
+          - name: fallback_reason
+            data_type: text
+            description: EVDS error that started the Frankfurter fallback. Null when source is evds.
+          - name: s3_key
+            data_type: text
+            description: S3 object key of the landing file (without bucket). Used for lineage.
+          - name: request_params
+            data_type: jsonb
+            description: API request parameters (start_date, end_date, series_codes).
+          - name: items
+            data_type: jsonb
+            description: Raw API items. EVDS and Frankfurter have different item formats.
+          - name: loaded_at
+            data_type: timestamptz
+            description: Warehouse write time. Updated on each rerun.
