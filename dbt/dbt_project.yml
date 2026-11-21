@@ -5,6 +5,7 @@ profile: tcmb_evds
 
 model-paths: ["models"]
 macro-paths: ["macros"]
+seed-paths: ["seeds"]
 test-paths: ["tests"]
 
 clean-targets:
@@ -22,3 +23,7 @@ models:
     marts:
       +schema: marts
       +materialized: table
+
+seeds:
+  tcmb_evds:
+    +schema: seeds

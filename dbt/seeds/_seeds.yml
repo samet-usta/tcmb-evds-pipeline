@@ -1,0 +1,38 @@
+version: 2
+
+seeds:
+  - name: series_metadata
+    description: >
+      Series metadata generated from config/series.yaml by
+      src/tools/generate_series_seed.py. Do not edit by hand.
+      One row per series.
+    config:
+      column_types:
+        series_code: text
+        series_name: text
+        group_name: text
+        frequency: text
+        unit: text
+        available_from: date
+        fallback_source: text
+        fallback_base_currency: text
+        fallback_quote_currency: text
+    columns:
+      - name: series_code
+        description: EVDS series code (e.g. TP.DK.USD.A.YTL). Primary key.
+      - name: series_name
+        description: English series name.
+      - name: group_name
+        description: Series group in config (e.g. fx_rates).
+      - name: frequency
+        description: business_daily, weekly_friday or monthly.
+      - name: unit
+        description: Value unit (TRY, percent, TRY_thousand).
+      - name: available_from
+        description: First date with data in EVDS.
+      - name: fallback_source
+        description: Fallback source (frankfurter) or null.
+      - name: fallback_base_currency
+        description: Fallback base currency (USD, EUR, GBP) or null.
+      - name: fallback_quote_currency
+        description: Fallback quote currency (TRY) or null.

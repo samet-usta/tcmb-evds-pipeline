@@ -1,0 +1,22 @@
+series_code,series_name,group_name,frequency,unit,available_from,fallback_source,fallback_base_currency,fallback_quote_currency
+TP.DK.USD.A.YTL,USD buying rate,fx_rates,business_daily,TRY,1950-01-02,frankfurter,USD,TRY
+TP.DK.USD.S.YTL,USD selling rate,fx_rates,business_daily,TRY,1950-01-02,frankfurter,USD,TRY
+TP.DK.EUR.A.YTL,EUR buying rate,fx_rates,business_daily,TRY,1950-01-02,frankfurter,EUR,TRY
+TP.DK.EUR.S.YTL,EUR selling rate,fx_rates,business_daily,TRY,1950-01-02,frankfurter,EUR,TRY
+TP.DK.GBP.A.YTL,GBP buying rate,fx_rates,business_daily,TRY,1950-01-02,frankfurter,GBP,TRY
+TP.DK.GBP.S.YTL,GBP selling rate,fx_rates,business_daily,TRY,1950-01-02,frankfurter,GBP,TRY
+TP.TRY.MT06,"TRY deposit rate, total (flow)",deposit_rates,weekly_friday,percent,2002-01-04,,,
+TP.USD.MT06,"USD deposit rate, total (flow)",deposit_rates,weekly_friday,percent,2002-01-04,,,
+TP.EUR.MT06,"EUR deposit rate, total (flow)",deposit_rates,weekly_friday,percent,2002-01-04,,,
+TP.KTF10,"Personal loan rate, TRY (flow)",loan_rates,weekly_friday,percent,2002-01-04,,,
+TP.KTF11,"Vehicle loan rate, TRY (flow)",loan_rates,weekly_friday,percent,2002-01-04,,,
+TP.KTF12,"Housing loan rate, TRY (flow)",loan_rates,weekly_friday,percent,2002-01-04,,,
+TP.KTF17,"Commercial loan rate, TRY (flow)",loan_rates,weekly_friday,percent,2002-01-04,,,
+TP.KTFTUK,"Consumer loan rate, TRY (flow)",loan_rates,weekly_friday,percent,2002-01-04,,,
+TP.HPBITABLO6.1,"Loans to residents, total",loan_volumes,weekly_friday,TRY_thousand,2024-06-28,,,
+TP.HPBITABLO6.2,Consumer loans,loan_volumes,weekly_friday,TRY_thousand,2024-06-28,,,
+TP.HPBITABLO6.19,Loans to non-financial corporations,loan_volumes,weekly_friday,TRY_thousand,2024-06-28,,,
+TP.HPBITABLO3.1,"TRY deposits, total",deposit_volumes,weekly_friday,TRY_thousand,2024-06-28,,,
+TP.HPBITABLO3.2,"TRY deposits, residents",deposit_volumes,weekly_friday,TRY_thousand,2024-06-28,,,
+TP.BISPOLFAIZ.TUR,CBRT policy rate (BIS source),policy_rate,monthly,percent,2002-02-01,,,
+TP.APIFON4,CBRT weighted average funding cost,funding_cost,business_daily,percent,2011-01-03,,,
