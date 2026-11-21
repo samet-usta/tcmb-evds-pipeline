@@ -1,0 +1,44 @@
+version: 2
+
+models:
+  - name: stg_evds__observations
+    description: >
+      EVDS observations in long format. One row per landing file, observation date and series.
+      Overlapping lookback windows are not deduplicated here (see intermediate).
+    columns:
+      - name: group_name
+        description: Series group from config/series.yaml (e.g. fx_rates).
+      - name: dt
+        description: Landing partition date (Airflow logical date).
+      - name: source
+        description: Always evds.
+      - name: ingested_at
+        description: API fetch time (UTC). Used for dedup in intermediate.
+      - name: observation_date
+        description: Parsed from Tarih. dd-mm-yyyy as is; monthly yyyy-m as first day of month.
+      - name: series_code
+        description: EVDS series code (response column with underscores replaced by dots).
+      - name: value
+        description: Observation value. Null when EVDS has no value (weekend, holiday).
+
+  - name: stg_frankfurter__fx_rates
+    description: >
+      Frankfurter (ECB) fallback FX rates. One row per landing file, observation date and currency pair.
+      Mapping to EVDS series codes is in intermediate.
+    columns:
+      - name: group_name
+        description: Series group (fx_rates only).
+      - name: dt
+        description: Landing partition date (Airflow logical date).
+      - name: source
+        description: Always frankfurter.
+      - name: ingested_at
+        description: API fetch time (UTC). Used for dedup in intermediate.
+      - name: observation_date
+        description: Rate date from Frankfurter.
+      - name: base_currency
+        description: Base currency (USD, EUR, GBP).
+      - name: quote_currency
+        description: Quote currency (TRY).
+      - name: value
+        description: Rate value (one ECB rate, no buy/sell split).
