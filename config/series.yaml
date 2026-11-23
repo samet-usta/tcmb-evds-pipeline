@@ -2,6 +2,8 @@
 # Source: TCMB EVDS 3 serieList. Verified: 2026-11-20 (HTTP 200, data filled).
 # frequency: business_daily | weekly_friday | monthly
 # available_from: first date with data in EVDS (backfill floor).
+# measure_type: rate | volume (rate is not summed, volume is summed).
+# max_fill_days: max days to forward fill a value (null = no fill, volume only).
 
 version: 1
 
@@ -10,6 +12,8 @@ series_groups:
     datagroup: bie_dkdovytl
     frequency: business_daily
     unit: TRY
+    measure_type: rate
+    max_fill_days: 10
     available_from: "1950-01-02"
     series:
       - code: TP.DK.USD.A.YTL
@@ -35,6 +39,8 @@ series_groups:
     datagroup: bie_mt100h
     frequency: weekly_friday
     unit: percent
+    measure_type: rate
+    max_fill_days: 10
     available_from: "2002-01-04"
     series:
       - code: TP.TRY.MT06
@@ -48,6 +54,8 @@ series_groups:
     datagroup: bie_kt100h
     frequency: weekly_friday
     unit: percent
+    measure_type: rate
+    max_fill_days: 10
     available_from: "2002-01-04"
     series:
       - code: TP.KTF10
@@ -65,6 +73,8 @@ series_groups:
     datagroup: bie_hpbitablo6
     frequency: weekly_friday
     unit: TRY_thousand
+    measure_type: volume
+    max_fill_days: null
     available_from: "2024-06-28"
     series:
       - code: TP.HPBITABLO6.1
@@ -78,6 +88,8 @@ series_groups:
     datagroup: bie_hpbitablo3
     frequency: weekly_friday
     unit: TRY_thousand
+    measure_type: volume
+    max_fill_days: null
     available_from: "2024-06-28"
     series:
       - code: TP.HPBITABLO3.1
@@ -89,6 +101,8 @@ series_groups:
     datagroup: bie_bispolfaiz
     frequency: monthly
     unit: percent
+    measure_type: rate
+    max_fill_days: 62
     available_from: "2002-02-01"
     series:
       - code: TP.BISPOLFAIZ.TUR
@@ -98,6 +112,8 @@ series_groups:
     datagroup: bie_apifon
     frequency: business_daily
     unit: percent
+    measure_type: rate
+    max_fill_days: 10
     available_from: "2011-01-03"
     series:
       - code: TP.APIFON4

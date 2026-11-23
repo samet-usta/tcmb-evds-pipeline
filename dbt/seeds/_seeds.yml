@@ -13,6 +13,8 @@ seeds:
         group_name: text
         frequency: text
         unit: text
+        measure_type: text
+        max_fill_days: integer
         available_from: date
         fallback_source: text
         fallback_base_currency: text
@@ -28,6 +30,10 @@ seeds:
         description: business_daily, weekly_friday or monthly.
       - name: unit
         description: Value unit (TRY, percent, TRY_thousand).
+      - name: measure_type
+        description: rate (not summed) or volume (summed).
+      - name: max_fill_days
+        description: Max days to forward fill a value. Null means no fill (volume series).
       - name: available_from
         description: First date with data in EVDS.
       - name: fallback_source
