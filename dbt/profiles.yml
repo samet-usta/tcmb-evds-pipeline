@@ -19,3 +19,12 @@ tcmb_evds:
       dbname: "{{ env_var('WAREHOUSE_DB') }}"
       schema: analytics
       threads: 4
+    full_refresh_check:
+      type: postgres
+      host: "{{ env_var('WAREHOUSE_HOST') }}"
+      port: "{{ env_var('WAREHOUSE_PORT') | as_number }}"
+      user: "{{ env_var('WAREHOUSE_USER') }}"
+      password: "{{ env_var('WAREHOUSE_PASSWORD') }}"
+      dbname: "{{ env_var('WAREHOUSE_DB') }}"
+      schema: dbt_full_refresh_check
+      threads: 4
