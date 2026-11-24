@@ -8,28 +8,60 @@ models:
     columns:
       - name: date_day
         description: Calendar date. Primary key.
+        data_tests:
+          - unique
+          - not_null
       - name: year
         description: Calendar year.
+        data_tests:
+          - not_null
       - name: quarter
         description: Calendar quarter (1-4).
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4]
       - name: month
         description: Month number (1-12).
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
       - name: month_name
         description: Month name in English.
+        data_tests:
+          - not_null
       - name: week_of_year
         description: ISO week number.
+        data_tests:
+          - not_null
       - name: day_of_week
         description: ISO day of week (1 = Monday, 7 = Sunday).
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5, 6, 7]
       - name: day_name
         description: Day name in English.
+        data_tests:
+          - not_null
       - name: is_weekend
         description: True on Saturday and Sunday.
+        data_tests:
+          - not_null
       - name: is_holiday
         description: True on a Turkish public holiday.
+        data_tests:
+          - not_null
       - name: holiday_name
         description: Holiday name. Null when is_holiday is false.
       - name: is_business_day
         description: True when the day is not a weekend and not a holiday.
+        data_tests:
+          - not_null
 
   - name: dim_series
     description: >
@@ -38,84 +70,189 @@ models:
     columns:
       - name: series_code
         description: EVDS series code (e.g. TP.DK.USD.A.YTL). Primary key.
+        data_tests:
+          - unique
+          - not_null
       - name: series_name
         description: Series name.
+        data_tests:
+          - not_null
       - name: group_name
         description: Series group (e.g. fx_rates, deposit_rates).
+        data_tests:
+          - not_null
       - name: frequency
         description: Publication frequency (business_daily, weekly_friday, monthly).
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["business_daily", "weekly_friday", "monthly"]
       - name: unit
         description: Unit of value (e.g. TRY, percent, TRY_thousand).
+        data_tests:
+          - not_null
       - name: measure_type
         description: rate or volume. Selects the fact table.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["rate", "volume"]
       - name: max_fill_days
         description: Maximum number of days a value is forward filled in fct_rates_daily.
       - name: available_from
         description: First date with data in EVDS. Lower bound for backfill.
+        data_tests:
+          - not_null
       - name: has_fallback
         description: True when the series has a fallback source.
+        data_tests:
+          - not_null
       - name: fallback_source
         description: Fallback source name (frankfurter). Null when has_fallback is false.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["frankfurter"]
 
   - name: fct_rates
     description: >
       Rate observations at source frequency. One row per series and
       observation date. Incremental merge with a lookback window on ingested_at.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [series_code, observation_date]
     columns:
       - name: series_code
         description: EVDS series code. Part of the primary key.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_series')
+                field: series_code
       - name: observation_date
         description: Observation date. Monthly series use the first day of the month. Part of the primary key.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_day
       - name: value
         description: Observed value. Never null.
+        data_tests:
+          - not_null
       - name: source
         description: Data source (evds or frankfurter).
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["evds", "frankfurter"]
       - name: dt
         description: Landing partition date (Airflow logical date) of the selected file.
+        data_tests:
+          - not_null
       - name: ingested_at
         description: API fetch time (UTC) of the selected file.
+        data_tests:
+          - not_null
       - name: dbt_updated_at
         description: Time when dbt last wrote the row.
+        data_tests:
+          - not_null
 
   - name: fct_volumes
     description: >
       Volume observations at source frequency. Same structure and load logic
       as fct_rates. Series with measure_type volume.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [series_code, observation_date]
     columns:
       - name: series_code
         description: EVDS series code. Part of the primary key.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_series')
+                field: series_code
       - name: observation_date
         description: Observation date. Part of the primary key.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_day
       - name: value
         description: Observed value. Never null.
+        data_tests:
+          - not_null
       - name: source
         description: Data source (evds).
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["evds"]
       - name: dt
         description: Landing partition date (Airflow logical date) of the selected file.
+        data_tests:
+          - not_null
       - name: ingested_at
         description: API fetch time (UTC) of the selected file.
+        data_tests:
+          - not_null
       - name: dbt_updated_at
         description: Time when dbt last wrote the row.
+        data_tests:
+          - not_null
 
   - name: fct_rates_daily
     description: >
       Daily rate series with forward fill. One row per rate series and day,
       from the first observation to var as_of_date. A value is filled for
       at most max_fill_days days after the last observation.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [series_code, date_day]
     columns:
       - name: series_code
         description: EVDS series code. Part of the primary key.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_series')
+                field: series_code
       - name: date_day
         description: Calendar date. Part of the primary key.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_day
       - name: value
         description: Observed value on this day. Null when there is no observation.
       - name: value_filled
         description: Observed value or the last observation within max_fill_days. Null after the limit.
       - name: is_filled
         description: True when value is null and value_filled comes from an earlier observation.
+        data_tests:
+          - not_null
       - name: filled_from_date
         description: Observation date of value_filled. Null after the limit.
       - name: source
         description: Source of the observation used in value_filled. Null after the limit.
       - name: dbt_updated_at
         description: Time when dbt last wrote the row.
+        data_tests:
+          - not_null

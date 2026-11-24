@@ -22,22 +22,47 @@ seeds:
     columns:
       - name: series_code
         description: EVDS series code (e.g. TP.DK.USD.A.YTL). Primary key.
+        data_tests:
+          - unique
+          - not_null
       - name: series_name
         description: English series name.
+        data_tests:
+          - not_null
       - name: group_name
         description: Series group in config (e.g. fx_rates).
+        data_tests:
+          - not_null
       - name: frequency
         description: business_daily, weekly_friday or monthly.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["business_daily", "weekly_friday", "monthly"]
       - name: unit
         description: Value unit (TRY, percent, TRY_thousand).
+        data_tests:
+          - not_null
       - name: measure_type
         description: rate (not summed) or volume (summed).
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["rate", "volume"]
       - name: max_fill_days
         description: Max days to forward fill a value. Null means no fill (volume series).
       - name: available_from
         description: First date with data in EVDS.
+        data_tests:
+          - not_null
       - name: fallback_source
         description: Fallback source (frankfurter) or null.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["frankfurter"]
       - name: fallback_base_currency
         description: Fallback base currency (USD, EUR, GBP) or null.
       - name: fallback_quote_currency
@@ -56,5 +81,10 @@ seeds:
     columns:
       - name: holiday_date
         description: Holiday date. Primary key.
+        data_tests:
+          - unique
+          - not_null
       - name: holiday_name
         description: Holiday name in Turkish.
+        data_tests:
+          - not_null

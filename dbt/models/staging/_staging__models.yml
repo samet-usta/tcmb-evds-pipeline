@@ -5,19 +5,38 @@ models:
     description: >
       EVDS observations in long format. One row per landing file, observation date and series.
       Overlapping lookback windows are not deduplicated here (see intermediate).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [group_name, dt, observation_date, series_code]
     columns:
       - name: group_name
         description: Series group from config/series.yaml (e.g. fx_rates).
+        data_tests:
+          - not_null
       - name: dt
         description: Landing partition date (Airflow logical date).
+        data_tests:
+          - not_null
       - name: source
         description: Always evds.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["evds"]
       - name: ingested_at
         description: API fetch time (UTC). Used for dedup in intermediate.
+        data_tests:
+          - not_null
       - name: observation_date
         description: Parsed from Tarih. dd-mm-yyyy as is; monthly yyyy-m as first day of month.
+        data_tests:
+          - not_null
       - name: series_code
         description: EVDS series code (response column with underscores replaced by dots).
+        data_tests:
+          - not_null
       - name: value
         description: Observation value. Null when EVDS has no value (weekend, holiday).
 
@@ -25,20 +44,49 @@ models:
     description: >
       Frankfurter (ECB) fallback FX rates. One row per landing file, observation date and currency pair.
       Mapping to EVDS series codes is in intermediate.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [group_name, dt, observation_date, base_currency, quote_currency]
     columns:
       - name: group_name
         description: Series group (fx_rates only).
+        data_tests:
+          - not_null
       - name: dt
         description: Landing partition date (Airflow logical date).
+        data_tests:
+          - not_null
       - name: source
         description: Always frankfurter.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["frankfurter"]
       - name: ingested_at
         description: API fetch time (UTC). Used for dedup in intermediate.
+        data_tests:
+          - not_null
       - name: observation_date
         description: Rate date from Frankfurter.
+        data_tests:
+          - not_null
       - name: base_currency
         description: Base currency (USD, EUR, GBP).
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["USD", "EUR", "GBP"]
       - name: quote_currency
         description: Quote currency (TRY).
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["TRY"]
       - name: value
         description: Rate value (one ECB rate, no buy/sell split).
+        data_tests:
+          - not_null

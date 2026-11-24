@@ -7,21 +7,40 @@ models:
       One row per (series_code, observation_date). The row with the latest
       ingested_at wins; on a tie, the latest dt wins. Null values are kept
       for source priority in int_observations_unioned.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [series_code, observation_date]
     columns:
       - name: series_code
         description: EVDS series code.
+        data_tests:
+          - not_null
       - name: observation_date
         description: Observation date.
+        data_tests:
+          - not_null
       - name: value
         description: Observed value. Null on weekends and holidays.
       - name: source
         description: Always evds.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["evds"]
       - name: group_name
         description: Series group.
+        data_tests:
+          - not_null
       - name: dt
         description: Landing partition date of the selected row.
+        data_tests:
+          - not_null
       - name: ingested_at
         description: API fetch time (UTC) of the selected row.
+        data_tests:
+          - not_null
 
   - name: int_frankfurter_fx_rates_mapped
     description: >
@@ -29,21 +48,42 @@ models:
       One Frankfurter rate maps to the buying (A) and selling (S) series
       with the same value. Mapping comes from the series_metadata seed.
       One row per (series_code, observation_date).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [series_code, observation_date]
     columns:
       - name: series_code
         description: EVDS series code from series_metadata.
+        data_tests:
+          - not_null
       - name: observation_date
         description: Observation date.
+        data_tests:
+          - not_null
       - name: value
         description: ECB based rate.
+        data_tests:
+          - not_null
       - name: source
         description: Always frankfurter.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["frankfurter"]
       - name: group_name
         description: Series group (fx_rates).
+        data_tests:
+          - not_null
       - name: dt
         description: Landing partition date of the selected row.
+        data_tests:
+          - not_null
       - name: ingested_at
         description: API fetch time (UTC) of the selected row.
+        data_tests:
+          - not_null
 
   - name: int_observations_unioned
     description: >
@@ -51,20 +91,46 @@ models:
       own frequency. EVDS has priority. Frankfurter fills a day only when
       EVDS has no row for that day. Rows with a null value are removed.
       One row per (series_code, observation_date).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [series_code, observation_date]
     columns:
       - name: series_code
         description: EVDS series code.
+        data_tests:
+          - not_null
       - name: frequency
         description: Series frequency from series_metadata.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["business_daily", "weekly_friday", "monthly"]
       - name: observation_date
         description: Observation date.
+        data_tests:
+          - not_null
       - name: value
         description: Observed value. Never null.
+        data_tests:
+          - not_null
       - name: source
         description: evds or frankfurter. Shows the fallback rows.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["evds", "frankfurter"]
       - name: group_name
         description: Series group.
+        data_tests:
+          - not_null
       - name: dt
         description: Landing partition date of the selected row.
+        data_tests:
+          - not_null
       - name: ingested_at
         description: API fetch time (UTC) of the selected row.
+        data_tests:
+          - not_null

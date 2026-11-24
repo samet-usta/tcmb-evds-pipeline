@@ -18,18 +18,33 @@ sources:
           One row per landing file. Primary key (group_name, dt).
           EVDS and Frankfurter rows are in the same table; the source column separates them.
           Items are raw JSON; staging unnests them.
+        data_tests:
+          - dbt_utils.unique_combination_of_columns:
+              arguments:
+                combination_of_columns: [group_name, dt]
         columns:
           - name: group_name
             data_type: text
+            data_tests:
+              - not_null
             description: Series group from config/series.yaml (JSON metadata.group). Part of the primary key.
           - name: dt
             data_type: date
+            data_tests:
+              - not_null
             description: Partition date (Airflow logical date). The file holds the window [dt - lookback, dt]. Part of the primary key.
           - name: source
             data_type: text
+            data_tests:
+              - not_null
+              - accepted_values:
+                  arguments:
+                    values: ["evds", "frankfurter"]
             description: Data source. Values evds or frankfurter.
           - name: ingested_at
             data_type: timestamptz
+            data_tests:
+              - not_null
             description: API fetch time (UTC). Used for source freshness and for dedup in intermediate.
           - name: fallback_reason
             data_type: text
@@ -42,6 +57,8 @@ sources:
             description: API request parameters (start_date, end_date, series_codes).
           - name: items
             data_type: jsonb
+            data_tests:
+              - not_null
             description: Raw API items. EVDS and Frankfurter have different item formats.
           - name: loaded_at
             data_type: timestamptz
