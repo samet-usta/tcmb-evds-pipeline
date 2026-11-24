@@ -35,3 +35,4 @@ Thumbs.db
 # Airflow runtime files
 airflow/logs/
 airflow/config/
+proje-dokumanlari/
