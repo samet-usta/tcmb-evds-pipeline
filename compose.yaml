@@ -46,6 +46,7 @@ x-airflow-common: &airflow-common
     - ./soda:/opt/pipeline/soda:ro
     - ./dbt:/opt/pipeline/dbt
     - ./data/evds_replay_snapshot:/opt/pipeline/data/evds_replay_snapshot
+    - ./data/sim_output:/opt/pipeline/data/sim_output
   user: "${AIRFLOW_UID}:0"
   depends_on: &airflow-common-depends-on
     airflow-db:
