@@ -52,6 +52,7 @@ def load_one_day(dt, s3_client, conn):
 def run_one_day(dt, s3_client):
     """Run all steps for one dt. Return one log row (dict)."""
     row = {"dt": dt.isoformat(), "status": ""}
+    as_of_json = '{"as_of_date": "' + dt.isoformat() + '"}'
 
     start = time.time()
     conn = get_connection()
@@ -62,14 +63,14 @@ def run_one_day(dt, s3_client):
     row["sec_load"] = round(time.time() - start, 1)
 
     start = time.time()
-    ok_dev = run_dbt(["run", "-t", "dev"])
+    ok_dev = run_dbt(["run", "-t", "dev", "--vars", as_of_json])
     row["sec_dev"] = round(time.time() - start, 1)
     if not ok_dev:
         row["status"] = "dbt_dev_failed"
         return row
 
     start = time.time()
-    ok_ref = run_dbt(["run", "--full-refresh", "-t", "full_refresh_check"])
+    ok_ref = run_dbt(["run", "--full-refresh", "-t", "full_refresh_check", "--vars", as_of_json])
     row["sec_ref"] = round(time.time() - start, 1)
     if not ok_ref:
         row["status"] = "dbt_ref_failed"
