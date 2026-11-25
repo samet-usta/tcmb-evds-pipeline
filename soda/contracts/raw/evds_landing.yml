@@ -1,24 +1,79 @@
 # Raw landing checks. Run after load, before dbt. Freshness: dbt source freshness.
+# Rules not covered by DB constraints (PK, NOT NULL) live here.
 dataset: warehouse/warehouse/raw/evds_landing
 
 checks:
+  # A: kolon adı ve tip değişirse yakala
+  - schema:
   - row_count:
       name: Table has rows
       threshold:
         must_be_greater_than: 0
+  # B: items boş array (warn: hafta sonu, tatil, yayın gecikmesinde boş dönüş normal)
+  - failed_rows:
+      name: items is a non-empty array
+      qualifier: items_non_empty
+      threshold:
+        must_be: 0
+        level: warn
+      expression: CASE WHEN jsonb_typeof(items) = 'array' THEN jsonb_array_length(items) = 0 ELSE true END
+  # C: source ve fallback_reason tutarlı olmalı
+  - failed_rows:
+      name: fallback_reason matches source
+      qualifier: fallback_consistent
+      expression: NOT ((source = 'evds' AND fallback_reason IS NULL) OR (source = 'frankfurter' AND fallback_reason IS NOT NULL))
+  # D: dt gelecekte olamaz (UTC/TR farkı için 1 gün tolerans)
+  - failed_rows:
+      name: dt is not in the future
+      qualifier: dt_not_future
+      expression: dt > (current_date + 1)
+  # E: her grupta dt boşluğu olamaz (satır sayısı = gün sayısı)
+  - metric:
+      name: Groups with dt gaps
+      query: |
+        SELECT COUNT(*)
+        FROM (
+          SELECT group_name
+          FROM raw.evds_landing
+          GROUP BY group_name
+          HAVING COUNT(*) <> MAX(dt) - MIN(dt) + 1
+        ) gaps
+      threshold:
+        must_be: 0
+  # F: s3_key group_name ve dt ile uyumlu olmalı
+  - failed_rows:
+      name: s3_key matches group_name and dt
+      qualifier: s3_key_consistent
+      expression: s3_key <> 'raw/' || group_name || '/dt=' || dt::text || '/data.json'
 
 columns:
   - name: group_name
+    data_type: text
     checks:
       - missing:
+      - invalid:
+          valid_values: ["policy_rate", "funding_cost", "fx_rates", "deposit_rates", "deposit_volumes", "loan_rates", "loan_volumes"]
   - name: dt
+    data_type: date
     checks:
       - missing:
   - name: source
+    data_type: text
     checks:
       - missing:
       - invalid:
           valid_values: ["evds", "frankfurter"]
   - name: ingested_at
+    data_type: timestamp with time zone
     checks:
       - missing:
+  - name: fallback_reason
+    data_type: text
+  - name: s3_key
+    data_type: text
+  - name: request_params
+    data_type: jsonb
+  - name: items
+    data_type: jsonb
+  - name: loaded_at
+    data_type: timestamp with time zone
