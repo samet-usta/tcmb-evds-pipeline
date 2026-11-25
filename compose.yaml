@@ -33,6 +33,9 @@ x-airflow-common: &airflow-common
     WAREHOUSE_DB: ${WAREHOUSE_DB}
     WAREHOUSE_USER: ${WAREHOUSE_USER}
     WAREHOUSE_PASSWORD: ${WAREHOUSE_PASSWORD}
+    AIRFLOW_CONN_EVDS_API: '{"conn_type":"http","host":"${EVDS_BASE_URL}","password":"${EVDS_API_KEY}"}'
+    AIRFLOW_CONN_AWS_LOCALSTACK: '{"conn_type":"aws","login":"${AWS_ACCESS_KEY_ID}","password":"${AWS_SECRET_ACCESS_KEY}","extra":{"region_name":"${AWS_DEFAULT_REGION}","endpoint_url":"${AWS_ENDPOINT_URL_S3}"}}'
+    AIRFLOW_CONN_WAREHOUSE_PG: '{"conn_type":"postgres","host":"${WAREHOUSE_HOST:-warehouse}","port":5432,"schema":"${WAREHOUSE_DB}","login":"${WAREHOUSE_USER}","password":"${WAREHOUSE_PASSWORD}"}'
     DBT_PROFILES_DIR: /opt/pipeline/dbt
   volumes:
     - ./dags:/opt/airflow/dags
