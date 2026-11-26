@@ -94,6 +94,17 @@ def load(group_name, **context):
     load_landing(group_name, date.fromisoformat(context["ds"]))
 
 
+@task
+def load_business_calendar(**context):
+    """Upsert the business calendar used by the Soda gap rule."""
+    from src.load.calendar_loader import load_calendar
+
+    run_date = date.fromisoformat(context["ds"])
+    start_day = date(2024, 1, 1)
+    end_day = date(run_date.year + 1, 12, 31)
+    load_calendar(start_day, end_day)
+
+
 with DAG (
     dag_id="evds_daily",
     schedule="0 17 * * 1-5",
@@ -119,7 +130,7 @@ with DAG (
 
     soda_contract = BashOperator(
         task_id="soda_contract",
-        bash_command="cd /opt/pipeline && bash soda/run_contract.sh ",
+        bash_command="cd /opt/pipeline && bash soda/run_contract.sh soda/contracts/raw/evds_landing.yml {{ ds }}",
         retries=0,
     )
 
@@ -143,5 +154,7 @@ with DAG (
         retries=0,
     )
 
-    ingest >> load_raw >> dbt_freshness >> soda_contract >> dbt_seed >> dbt_run >> dbt_test
+    calendar_loaded = load_business_calendar()
+
+    ingest >> load_raw >> dbt_freshness >> calendar_loaded >> soda_contract >> dbt_seed >> dbt_run >> dbt_test
 
