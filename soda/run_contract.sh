@@ -4,12 +4,13 @@
 set -uo pipefail
 
 CONTRACT="${1:-soda/contracts/raw/evds_landing.yml}"
+DS="${2:-$(date +%F)}"
 REPORT_DIR="reports/soda"
 REPORT="$REPORT_DIR/evds_landing_$(date +%Y%m%d_%H%M%S).txt"
 mkdir -p "$REPORT_DIR"
 
 /opt/soda-venv/bin/soda contract verify \
-  -c "$CONTRACT" -ds soda/data_sources/warehouse.yml -v 2>&1 | tee "$REPORT"
+  -c "$CONTRACT" -ds soda/data_sources/warehouse.yml --set ds="$DS" -v 2>&1 | tee "$REPORT"
 # tee exit code'u maskeler, o yüzden PIPESTATUS okunur
 code=${PIPESTATUS[0]}
 
