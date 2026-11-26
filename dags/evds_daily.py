@@ -51,6 +51,14 @@ def select_groups(**context):
 
     return selected_groups
 
+@task.short_circuit
+def check_business_day(**context):
+    """Return False on weekends and public holidays. Downstream tasks skip."""
+    from src.ingestion.business_calendar import is_business_day
+
+    run_date = date.fromisoformat(context["ds"])
+    return is_business_day(run_date)
+
 @task(
     retries=3,
     retry_delay=timedelta(minutes=5),
@@ -97,7 +105,9 @@ with DAG (
     is_paused_upon_creation=True,
     tags=["evds"],
 ) as dag:
+    business_day_check = check_business_day()
     selected_groups = select_groups()
+    business_day_check >> selected_groups
     ingest = ingest_land.expand(group_name=selected_groups)
     load_raw = load.expand(group_name=selected_groups)
 
