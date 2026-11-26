@@ -1,5 +1,7 @@
 # TCMB EVDS Pipeline: Airflow, S3 and dbt
 
+Turkish version: [tr/README.md](tr/README.md)
+
 A daily batch data pipeline for Turkish central bank (TCMB EVDS) series: exchange rates, deposit and loan rates, loan and deposit volumes, policy rate and funding cost.
 Airflow orchestrates the run. Python ingests the data into an S3 landing zone. A load step writes it to PostgreSQL. dbt models it. Soda and dbt tests check data quality.
 Everything runs in Docker.

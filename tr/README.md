@@ -1,5 +1,7 @@
 # TCMB EVDS Pipeline: Airflow, S3 and dbt
 
+English version: [README.md](../README.md)
+
 Türkiye Cumhuriyet Merkez Bankası (TCMB EVDS) serileri için günlük çalışan bir batch data pipeline: döviz kurları, mevduat ve kredi faizleri, kredi ve mevduat hacimleri, politika faizi ve fonlama maliyeti.
 Airflow çalıştırmayı yönetir. Python veriyi S3 landing zone'a alır (ingest). Bir load adımı veriyi PostgreSQL'e yazar. dbt veriyi modeller. Soda ve dbt testleri veri kalitesini kontrol eder.
 Her şey Docker içinde çalışır.
