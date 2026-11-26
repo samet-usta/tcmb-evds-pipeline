@@ -39,3 +39,38 @@ def test_business_days_between_skips_holiday():
     days = business_days_between(date(2026, 10, 26), date(2026, 10, 30))
     assert date(2026, 10, 29) not in days
     assert len(days) == 4
+
+
+# --- extra_closed_days config tests ---
+from datetime import date
+
+import pytest
+
+from src.ingestion import business_calendar
+
+
+@pytest.fixture
+def config_path(tmp_path, monkeypatch):
+    """Point the module to a temp config file and clear the cache."""
+    path = tmp_path / "extra_closed_days.yaml"
+    monkeypatch.setattr(business_calendar, "EXTRA_CLOSED_DAYS_PATH", path)
+    business_calendar.load_extra_closed_days.cache_clear()
+    yield path
+    business_calendar.load_extra_closed_days.cache_clear()
+
+
+def test_config_day_is_not_business_day(config_path):
+    config_path.write_text("extra_closed_days: [2024-07-12]\n")
+    assert business_calendar.is_business_day(date(2024, 7, 12)) is False
+    assert business_calendar.is_business_day(date(2024, 7, 11)) is True
+
+
+def test_empty_config_changes_nothing(config_path):
+    config_path.write_text("extra_closed_days: []\n")
+    assert business_calendar.is_business_day(date(2024, 7, 12)) is True
+
+
+def test_invalid_config_value_raises(config_path):
+    config_path.write_text('extra_closed_days: ["not-a-date"]\n')
+    with pytest.raises(ValueError):
+        business_calendar.load_extra_closed_days()

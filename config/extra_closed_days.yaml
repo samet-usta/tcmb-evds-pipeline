@@ -1,0 +1,4 @@
+# Days when EVDS publishes no data, but they are not public holidays
+# (for example administrative leave bridge days).
+# Add a day only after EvdsNoDataError proves it. Format: YYYY-MM-DD.
+extra_closed_days: []
