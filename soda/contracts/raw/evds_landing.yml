@@ -2,6 +2,11 @@
 # Rules not covered by DB constraints (PK, NOT NULL) live here.
 dataset: warehouse/warehouse/raw/evds_landing
 
+# ds: run date (YYYY-MM-DD). Passed by run_contract.sh. The default is invalid on purpose: a missing ds must fail.
+variables:
+  ds:
+    default: "ds-not-set"
+
 checks:
   # A: kolon adı ve tip değişirse yakala
   - schema:
@@ -27,17 +32,26 @@ checks:
       name: dt is not in the future
       qualifier: dt_not_future
       expression: dt > (current_date + 1)
-  # E: her grupta dt boşluğu olamaz (satır sayısı = gün sayısı)
+  # E: pencerede (ds-30 .. ds) grubun ilk dt'sinden ds'e kadar her iş günü landing'de olmalı
   - metric:
       name: Groups with dt gaps
       query: |
         SELECT COUNT(*)
         FROM (
-          SELECT group_name
-          FROM raw.evds_landing
-          GROUP BY group_name
-          HAVING COUNT(*) <> MAX(dt) - MIN(dt) + 1
-        ) gaps
+          SELECT g.group_name, c.dt
+          FROM (
+            SELECT group_name, MIN(dt) AS first_dt
+            FROM raw.evds_landing
+            WHERE dt BETWEEN DATE '${var.ds}' - 30 AND DATE '${var.ds}'
+            GROUP BY group_name
+          ) g
+          JOIN raw.business_calendar c
+            ON c.is_business_day
+           AND c.dt BETWEEN g.first_dt AND DATE '${var.ds}'
+          LEFT JOIN raw.evds_landing l
+            ON l.group_name = g.group_name AND l.dt = c.dt
+          WHERE l.dt IS NULL
+        ) missing
       threshold:
         must_be: 0
   # F: s3_key group_name ve dt ile uyumlu olmalı
