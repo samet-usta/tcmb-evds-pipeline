@@ -15,12 +15,34 @@ GROUPS = [
     "funding_cost",
 ]
 
-# Geçici sabit. Grup bazında lookback A6-S3'te gelir.
-LOOKBACK_DAYS = 90
+# Grup başına geriye bakma süresi (gün). Frekansa göre seçildi.
+GROUP_LOOKBACK_DAYS = {
+    "fx_rates": 14,
+    "funding_cost": 14,
+    "deposit_rates": 35,
+    "loan_rates": 35,
+    "loan_volumes": 56,
+    "deposit_volumes": 56,
+    "policy_rate": 90,
+}
 # Container içinde dbt çalıştırma komutu (prod target)
 DBT = "cd /opt/pipeline/dbt && DBT_TARGET=prod /opt/dbt-venv/bin/dbt"
 
-@task
+# Ortak ayarlar. Task bazında override edilir.
+default_args = {
+    "retries": 2,
+    "retry_delay": timedelta(minutes=2),
+    "execution_timeout": timedelta(minutes=10),
+}
+
+@task(
+    retries=3,
+    retry_delay=timedelta(minutes=5),
+    retry_exponential_backoff=True,
+    max_retry_delay=timedelta(minutes=30),
+    execution_timeout=timedelta(minutes=15),
+)
+
 def ingest_land(group_name, **context):
     """Fetch one group and write it to S3 landing."""
     from src.ingestion.ingest import fetch_with_fallback
@@ -28,7 +50,8 @@ def ingest_land(group_name, **context):
 
     dt = context["ds"]
     end_date = date.fromisoformat(dt)
-    start_date = end_date - timedelta(days=LOOKBACK_DAYS)
+    lookback_days = GROUP_LOOKBACK_DAYS[group_name]
+    start_date = end_date - timedelta(days=lookback_days)
 
     envelope = fetch_with_fallback(group_name, start_date, end_date)
     write_landing(envelope, end_date)
@@ -47,6 +70,9 @@ with DAG (
     schedule="0 17 * * 1-5",
     start_date=pendulum.datetime(2026,11,1,tz="Europe/Istanbul"),
     catchup=False,
+    max_active_runs=1,
+    default_args=default_args,
+    dagrun_timeout=timedelta(hours=2),
     is_paused_upon_creation=True,
     tags=["evds"],
 ) as dag:
@@ -56,26 +82,33 @@ with DAG (
     dbt_freshness = BashOperator(
         task_id="dbt_source_freshness",
         bash_command=f"{DBT} source freshness",
+        retries=0,
     )
 
     soda_contract = BashOperator(
         task_id="soda_contract",
         bash_command="cd /opt/pipeline && bash soda/run_contract.sh ",
+        retries=0,
     )
 
     dbt_seed = BashOperator(
         task_id="dbt_seed",
         bash_command=f"{DBT} seed",
+        retries=1,
+        execution_timeout=timedelta(minutes=20),
     )
 
     dbt_run = BashOperator(
         task_id="dbt_run",
         bash_command=DBT + """ run --vars '{"as_of_date": "{{ ds }}"}'""",
+        retries=1,
+        execution_timeout=timedelta(minutes=20),
     )
 
     dbt_test = BashOperator(
         task_id="dbt_test",
         bash_command=f"{DBT} test",
+        retries=0,
     )
 
     ingest >> load_raw >> dbt_freshness >> soda_contract >> dbt_seed >> dbt_run >> dbt_test
