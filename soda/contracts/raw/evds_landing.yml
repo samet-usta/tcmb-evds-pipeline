@@ -60,6 +60,23 @@ checks:
       qualifier: s3_key_consistent
       expression: s3_key <> 'raw/' || group_name || '/dt=' || dt::text || '/data.json'
 
+  # G: EVDS cevabında hiç seri değeri yoksa (tüm değerler null) warn.
+  # Kısmi null normal: hafta sonu ve tatil satırları null döner.
+  - failed_rows:
+      name: items has at least one non-null value
+      qualifier: items_not_all_null
+      threshold:
+        must_be: 0
+        level: warn
+      expression: >-
+        CASE WHEN jsonb_array_length(items) = 0 THEN false
+        ELSE NOT EXISTS (
+        SELECT 1
+        FROM jsonb_array_elements(items) AS item, jsonb_each(item) AS kv
+        WHERE kv.key NOT IN ('Tarih', 'UNIXTIME')
+        AND jsonb_typeof(kv.value) <> 'null'
+        ) END
+
 columns:
   - name: group_name
     data_type: text
