@@ -35,6 +35,22 @@ default_args = {
     "execution_timeout": timedelta(minutes=10),
 }
 
+@task
+def select_groups(**context):
+    """Return groups that have data on the run date (available_from <= ds)."""
+    from src.ingestion.series_config import get_group_config
+
+    run_date = date.fromisoformat(context["ds"])
+    selected_groups = []
+
+    for group_name in GROUPS:
+        group_config = get_group_config(group_name)
+        available_from = date.fromisoformat(group_config["available_from"])
+        if available_from <= run_date:
+            selected_groups.append(group_name)
+
+    return selected_groups
+
 @task(
     retries=3,
     retry_delay=timedelta(minutes=5),
@@ -46,12 +62,17 @@ default_args = {
 def ingest_land(group_name, **context):
     """Fetch one group and write it to S3 landing."""
     from src.ingestion.ingest import fetch_with_fallback
+    from src.ingestion.series_config import get_group_config
     from src.landing.s3_writer import write_landing
 
     dt = context["ds"]
     end_date = date.fromisoformat(dt)
     lookback_days = GROUP_LOOKBACK_DAYS[group_name]
-    start_date = end_date - timedelta(days=lookback_days)
+    group_config = get_group_config(group_name)
+    available_from = date.fromisoformat(group_config["available_from"])
+
+    # Veri olmayan tarihi isteme: pencere başı available_from'dan önce olamaz.
+    start_date = max(available_from, end_date - timedelta(days=lookback_days))
 
     envelope = fetch_with_fallback(group_name, start_date, end_date)
     write_landing(envelope, end_date)
@@ -76,8 +97,9 @@ with DAG (
     is_paused_upon_creation=True,
     tags=["evds"],
 ) as dag:
-    ingest = ingest_land.expand(group_name=GROUPS)
-    load_raw = load.expand(group_name=GROUPS)
+    selected_groups = select_groups()
+    ingest = ingest_land.expand(group_name=selected_groups)
+    load_raw = load.expand(group_name=selected_groups)
 
     dbt_freshness = BashOperator(
         task_id="dbt_source_freshness",
